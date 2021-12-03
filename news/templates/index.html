@@ -1,0 +1,208 @@
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+
+    <script type="text/JavaScript"
+          src="http://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+    <style>
+        .content{
+            height: 75%;
+        }
+        .messageDiv{
+            margin-top: 20px;
+            margin-bottom: 50px;
+        }
+        .toDoDiv{
+
+        }
+        .custom-btn{
+            font-size: 10px;
+        }
+        .panel-footer{
+            height:10%;
+            color:gray;
+        }
+    </style>
+
+    <script type="text/javascript">
+      $(function() {
+        $('#btn_cycle_start').on('click', cycle_start);  // 이벤트 처리 함수 등록
+        $('#btn_cycle_stop').on('click', cycle_stop);  // 이벤트 처리 함수 등록
+        $('#btn_cycle_refresh').on('click', cycle_refresh);  // 이벤트 처리 함수 등록
+        $('#btn_cycle_delete_all').on('click', cycle_delete_all);  // 이벤트 처리 함수 등록
+        $('#btn_trend').on('click', btn_trend_analysis);  // 워드 클라우드 분석 실행
+        $('#btn_trend_result').on('click', btn_trend_analysis_result);  // 분석 결과 조회
+      });
+
+      var cycle_start_ajax_id = 0; // 순환 함수의 참조값 저장
+      function cycle_start() {
+        // console.log('-> cycle_start');
+        cycle_start_ajax_id = setInterval(cycle_start_ajax, 10000);  // 1000 * 30
+        // console.log('-> cycle_start_ajax_id: ' + cycle_start_ajax_id); // 3
+        $('#panel').html("News 수집중입니다. <img src='/static/images/bar05.gif' style='width: 50%;'>"); // static
+        $('#panel').css("display", "");
+      }
+
+      function cycle_stop() {
+        // console.log('-> cycle_stop');
+        clearInterval(cycle_start_ajax_id);
+        $('#panel').html('News 수집을 중지했습니다.');
+      }
+
+      function cycle_refresh() {
+        location.reload(); // 현재 페이지 다시 읽기
+      }
+
+      function cycle_start_ajax() {
+        var params = '';
+        console.log('-> cycle_start_ajax executed.');
+        // var params = $('#frm').serialize(); // 직렬화, 폼의 데이터를 키와 값의 구조로 조합
+        // alert('params: ' + params);
+        // return;
+
+        $.ajax({
+          url: '/news/crawling', // form action, path('crawling', views.crawling, name='crawling'),
+          type: 'get',  // form method, get
+          cache: false, // 응답 결과 임시 저장 취소
+          async: true,  // true: 비동기 통신
+          dataType: 'json', // 응답 형식: json, html, xml...
+          data: params,      // 데이터
+          success: function(rdata) { // 응답이 온경우
+            $('#panel').html(rdata.cnt + '건 처리됨.');  // 보통 DIV, SPAN등에 출력
+          },
+          // Ajax 통신 에러, 응답 코드가 200이 아닌경우, dataType이 다른경우
+          error: function(request, status, error) { // callback 함수
+            console.log(error);
+          }
+        });
+
+        console.log('-> Django json 수신 대기중');
+        $('#panel').html("Test");
+        $('#panel').html("News 수집중입니다. <img src='/static/images/bar05.gif' style='width: 50%;'>"); // static
+        $('#panel').show(); // 숨겨진 태그의 출력
+      }
+
+      function cycle_delete_all() {
+        var sw = confirm('모든 수집된 자료를 삭제 하시겠습니까?');
+        if (sw == true) {
+            var params = '';
+            console.log('-> cycle_delete_all executed.');
+            // var params = $('#frm').serialize(); // 직렬화, 폼의 데이터를 키와 값의 구조로 조합
+            // alert('params: ' + params);
+            // return;
+
+            $.ajax({
+              url: '/news/delete_all',
+              type: 'get',  // form method, get
+              cache: false, // 응답 결과 임시 저장 취소
+              async: true,  // true: 비동기 통신
+              dataType: 'json', // 응답 형식: json, html, xml...
+              data: params,      // 데이터
+              success: function(rdata) { // 응답이 온경우
+                console.log('-> ' + rdata.msg);  // 보통 DIV, SPAN등에 출력
+                $('#panel').html(rdata.msg + ' 5초후 자동으로 새로 고침 됩니다.');
+                setTimeout(cycle_refresh, 5000); // 5초후 자동으로 새로 고침
+              },
+              // Ajax 통신 에러, 응답 코드가 200이 아닌경우, dataType이 다른경우
+              error: function(request, status, error) { // callback 함수
+                console.log(error);
+              }
+            });
+
+            $('#panel').html("모든 News 삭제중입니다. <img src='/static/images/bar05.gif' style='width: 50%;'>"); // static
+            $('#panel').show(); // 숨겨진 태그의 출력
+        }
+      }
+
+      // 워드 클라우드 분석 실행
+     function btn_trend_analysis() {
+       // alert('데이터분석 시작');
+
+        var params = '';
+        console.log('-> btn_trend_analysis executed.');
+        // var params = $('#frm').serialize(); // 직렬화, 폼의 데이터를 키와 값의 구조로 조합
+        // alert('params: ' + params);
+        // return;
+
+        $.ajax({
+          url: '/news/trend_analysis',
+          type: 'get',  // form method, get
+          cache: false, // 응답 결과 임시 저장 취소
+          async: true,  // true: 비동기 통신
+          dataType: 'json', // 응답 형식: json, html, xml...
+          data: params,      // 데이터
+          success: function(rdata) { // 응답이 온경우
+            console.log('-> ' + rdata.msg);
+            var tags = rdata.msg + '<br><br>';
+            tags += "<img src='/static/images/news-wordcloud.png' style='width: 100%;'>";
+            $('#panel').html(tags);
+          },
+          // Ajax 통신 에러, 응답 코드가 200이 아닌경우, dataType이 다른경우
+          error: function(request, status, error) { // callback 함수
+            console.log(error);
+          }
+        });
+
+        $('#panel').html("모든 News 분석입니다. <img src='/static/images/bar05.gif' style='width: 50%;'>"); // static
+        $('#panel').show(); // 숨겨진 태그의 출력
+      }
+
+      // 분석 결과 조회
+     function btn_trend_analysis_result() {
+        var tags = '';
+        tags += "<img src='/static/images/news-wordcloud.png' style='width: 100%;'>";
+        $('#panel').html(tags);
+        $('#panel').show(); // 숨겨진 태그의 출력
+     }
+</script>
+
+    <title>Crawling</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="page-header" style="text-align: center;">
+                <h1>News 수집기 <small>with Django</small></h1>
+                <DIV class='content_body'>
+                    <button id='btn_cycle_start' class='btn btn-primary'>News 수집 시작</button>
+                    <button id='btn_cycle_stop' class='btn btn-primary'>News 수집 중지</button>
+                    <button id='btn_cycle_refresh' class='btn btn-primary'>수집된 내용 확인</button>
+                    <button id='btn_cycle_delete_all' class='btn btn-danger'>수집된 내용 모두 삭제</button>
+                    <button id='btn_trend' class='btn btn-success'>트랜드 분석</button>
+                    <button id='btn_trend_result' class='btn btn-warning'>분석 결과 조회</button>
+                </DIV> <!-- content_body END -->
+
+                <DIV id='panel' style='display: none; margin: 10px auto; text-align: center; width: 60%;'></DIV>
+            </div>
+        </div>
+        <div class="content">
+            <div class="toDoDiv">
+                <ul class="list-group">
+                    {% for news in result_set %} <!-- content = {'todos': todos} # key, value -->
+                    <form action="./delete" method="POST">{% csrf_token %}
+                        <div class="input-group">
+                            <li class="list-group-item">
+                                <A href="{{ news.link }}">{{ news.article }}</A>
+                            </li>
+                            <input type="hidden" id="newsno" name="newsno" value="{{ news.newsno }}"></input>
+
+                            <span class="input-group-addon">
+                                <button type="submit" class="custom-btn btn btn-warning">완료(삭제)</button>
+                            </span>
+                        </div>
+                    </form>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+        <div class="panel-footer">
+            Crawling by Django.
+        </div>
+    </div>
+</body>
+</html>
